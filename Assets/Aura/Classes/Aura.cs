@@ -36,7 +36,7 @@ namespace AuraAPI
     [RequireComponent(typeof(Camera))]
     [AddComponentMenu("Aura/Aura Main Component", 0)]
     [ExecuteInEditMode]
-    public class Aura : MonoBehaviour
+    public partial class Aura : MonoBehaviour
     {
         #region Public members
         /// <summary>
@@ -140,10 +140,21 @@ namespace AuraAPI
             {
                 Initialize();
             }
+
+#if UNITY_PIPELINE_URP
+            if(_hasBeenAssigned)
+            {
+                InitializeURP();
+            }
+#endif
         }
 
         private void OnDisable()
         {
+#if UNITY_PIPELINE_URP
+            DisposeURP();
+#endif
+
             Shader.DisableKeyword("USE_AURA");
 
             DisposeFrustrum();
@@ -170,6 +181,7 @@ namespace AuraAPI
             }
         }
 
+#if !UNITY_PIPELINE_URP
         [ImageEffectOpaque]
         private void OnRenderImage(RenderTexture src, RenderTexture dest)
         {
@@ -201,6 +213,7 @@ namespace AuraAPI
 
             ++Aura.FrameId;
         }
+#endif
         #endregion
 
         #region Functions
