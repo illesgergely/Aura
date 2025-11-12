@@ -71,14 +71,16 @@ namespace AuraAPI.URP
                 _auraInstance.DispatchVolumetricCompute(cmd, ref renderingData);
 
                 // Composite onto camera color target
-                // The volumetric data is already set as a global texture (Aura_VolumetricDataTexture)
+                // The volumetric data is already set as a global texture (Aura_VolumetricLightingTexture)
                 // by the Frustum.ComputeData() call, so we just need to blit with the composite shader
                 cmd.BeginSample(_profilerTag);
                 
-                RenderTargetIdentifier cameraTarget = renderingData.cameraData.renderer.cameraColorTarget;
+                // Get camera color target handle
+                var cameraColorTarget = renderingData.cameraData.renderer.cameraColorTarget;
                 
-                // Blit with composite material - the shader will sample from the global Aura_VolumetricDataTexture
-                cmd.Blit(cameraTarget, cameraTarget, _compositeMaterial, 0);
+                // Blit with composite material - the shader will sample from the global volumetric texture
+                // We blit from the camera target to itself, which applies the volumetric fog
+                Blit(cmd, cameraColorTarget, cameraColorTarget, _compositeMaterial, 0);
                 
                 cmd.EndSample(_profilerTag);
 
