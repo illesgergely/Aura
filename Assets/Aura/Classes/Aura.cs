@@ -142,7 +142,10 @@ namespace AuraAPI
             }
 
 #if UNITY_PIPELINE_URP
-            InitializeURP();
+            if(_hasBeenAssigned)
+            {
+                InitializeURP();
+            }
 #endif
         }
 
