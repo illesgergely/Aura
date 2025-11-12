@@ -71,12 +71,13 @@ namespace AuraAPI.URP
                 _auraInstance.DispatchVolumetricCompute(cmd, ref renderingData);
 
                 // Composite onto camera color target
+                // The volumetric data is already set as a global texture (Aura_VolumetricDataTexture)
+                // by the Frustum.ComputeData() call, so we just need to blit with the composite shader
                 cmd.BeginSample(_profilerTag);
                 
                 RenderTargetIdentifier cameraTarget = renderingData.cameraData.renderer.cameraColorTarget;
-                cmd.SetGlobalTexture("_AuraVolumeTex", _auraInstance.GetCompositeTexture());
                 
-                // Blit with composite material
+                // Blit with composite material - the shader will sample from the global Aura_VolumetricDataTexture
                 cmd.Blit(cameraTarget, cameraTarget, _compositeMaterial, 0);
                 
                 cmd.EndSample(_profilerTag);

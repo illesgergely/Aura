@@ -33,7 +33,6 @@ namespace AuraAPI
     public partial class Aura : MonoBehaviour
     {
         #region URP Private Members
-        private RenderTexture _lightingVolumeComposite;
         private bool _urpInitialized;
         #endregion
 
@@ -44,7 +43,6 @@ namespace AuraAPI
             if (_urpInitialized)
                 return;
 
-            AllocateCompositeTarget();
             RenderPipelineManager.beginCameraRendering += OnBeginCameraRenderingURP;
             RenderPipelineManager.endCameraRendering += OnEndCameraRenderingURP;
             
@@ -59,36 +57,7 @@ namespace AuraAPI
             RenderPipelineManager.beginCameraRendering -= OnBeginCameraRenderingURP;
             RenderPipelineManager.endCameraRendering -= OnEndCameraRenderingURP;
 
-            if (_lightingVolumeComposite != null)
-            {
-                _lightingVolumeComposite.Release();
-                _lightingVolumeComposite = null;
-            }
-
             _urpInitialized = false;
-        }
-
-        private void AllocateCompositeTarget()
-        {
-            Camera cam = GetComponent<Camera>();
-            int width = Mathf.Max(1, cam.pixelWidth);
-            int height = Mathf.Max(1, cam.pixelHeight);
-
-            if (_lightingVolumeComposite != null)
-            {
-                if (_lightingVolumeComposite.width == width && _lightingVolumeComposite.height == height)
-                    return;
-
-                _lightingVolumeComposite.Release();
-            }
-
-            _lightingVolumeComposite = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBHalf)
-            {
-                enableRandomWrite = true,
-                filterMode = FilterMode.Bilinear,
-                wrapMode = TextureWrapMode.Clamp
-            };
-            _lightingVolumeComposite.Create();
         }
 
         private void OnBeginCameraRenderingURP(ScriptableRenderContext context, Camera camera)
@@ -135,9 +104,6 @@ namespace AuraAPI
 
             // Set global frame ID
             Shader.SetGlobalInt("_frameID", Aura.FrameId);
-
-            // Ensure composite target is allocated and correct size
-            AllocateCompositeTarget();
         }
 
         /// <summary>
@@ -145,27 +111,10 @@ namespace AuraAPI
         /// </summary>
         public void DispatchVolumetricCompute(CommandBuffer cmd, ref RenderingData renderingData)
         {
-            if (computeDataComputeShader == null || _lightingVolumeComposite == null)
-                return;
-
-            // For MVP: simple dispatch to write volumetric data to the composite texture
-            // This is a placeholder that the existing Frustum.ComputeData() will handle
-            // through its internal compute shader dispatches
-
             // The actual compute work is done in UpdateFrustrumURP -> frustum.ComputeData()
-            // Here we just ensure the output texture is set for the post-process accumulation
-            
-            // Clear the composite target
-            cmd.SetRenderTarget(_lightingVolumeComposite);
-            cmd.ClearRenderTarget(false, true, Color.clear);
-        }
-
-        /// <summary>
-        /// Gets the composite texture containing the volumetric lighting result
-        /// </summary>
-        public RenderTexture GetCompositeTexture()
-        {
-            return _lightingVolumeComposite;
+            // which dispatches the compute shaders and sets the global Aura_VolumetricDataTexture
+            // This method is here for future extensions where we might want to do additional
+            // compute work through the command buffer
         }
 
         #endregion

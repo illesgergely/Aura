@@ -38,7 +38,7 @@ Shader "Hidden/Aura/Composite"
         {
             Name "AuraComposite"
             
-            Blend One One // Additive blending
+            // No blending - we'll apply fog directly in the shader
             ZTest Always 
             ZWrite Off 
             Cull Off
@@ -49,12 +49,16 @@ Shader "Hidden/Aura/Composite"
             #pragma target 5.0
             
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
+            
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
             
-            TEXTURE2D(_AuraVolumeTex);
-            SAMPLER(sampler_AuraVolumeTex);
+            // Global volumetric texture set by Aura
+            TEXTURE3D(Aura_VolumetricDataTexture);
+            SAMPLER(samplerAura_VolumetricDataTexture);
+            
+            float4 Aura_FrustumRange;
 
             struct Attributes 
             { 
@@ -78,11 +82,27 @@ Shader "Hidden/Aura/Composite"
 
             half4 frag(Varyings input) : SV_Target
             {
-                // Sample the volumetric lighting texture
-                float4 volumetricColor = SAMPLE_TEXTURE2D(_AuraVolumeTex, sampler_AuraVolumeTex, input.uv);
+                // Sample the camera color
+                float4 backColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
                 
-                // Return for additive blending (Blend One One does the addition)
-                return volumetricColor;
+                // Sample depth
+                float depth = SampleSceneDepth(input.uv);
+                depth = LinearEyeDepth(depth, _ZBufferParams);
+                
+                // Rescale depth to frustum range (normalized 0-1)
+                float rescaledDepth = saturate((depth - Aura_FrustumRange.x) / (Aura_FrustumRange.y - Aura_FrustumRange.x));
+                
+                // Sample the volumetric data texture (3D texture with lighting and fog)
+                float3 volumeCoords = float3(input.uv, rescaledDepth);
+                float4 fogValue = SAMPLE_TEXTURE3D(Aura_VolumetricDataTexture, samplerAura_VolumetricDataTexture, volumeCoords);
+                
+                // Apply fog: 
+                // fogValue.rgb = inscattering (light accumulated along the ray)
+                // fogValue.w = transmission (how much of the background is visible)
+                // Final color = background * transmission + inscattering
+                backColor.rgb = backColor.rgb * fogValue.w + fogValue.rgb;
+                
+                return backColor;
             }
             ENDHLSL
         }
