@@ -52,6 +52,7 @@ Here’s the schematic overview of Aura’s internal process :
 ----------
 ## Requirements 
 
+### Built-in Render Pipeline
 Aura **strictly** requires full support of the following elements to work :
 - RenderTextures (3D as well)
 - Texture2DArrays
@@ -68,6 +69,26 @@ PLEASE DO NOT KILL UNITY AND WAIT UNTIL THE IMPORT IS DONE.
 If you did kill Unity, or experienced any trouble, during importation, re-import the file Aura/Shaders/ComputeShaders/ComputeDataComputeShader.compute**
 
 Also, please also understand that you might need a Technical Artist or a Graphics Programmer if you want to make Aura fit some special requirements. 
+
+### Universal Render Pipeline (URP)
+
+Aura now includes **experimental URP support** for Unity 2022.3 LTS with URP 14.x. 
+
+**Requirements for URP:**
+- Unity 2022.3 LTS or newer
+- Universal Render Pipeline 14.x package
+- Same hardware requirements as Built-in Pipeline (3D textures, Texture2DArrays, ComputeShaders)
+- Scripting Define Symbol: `UNITY_PIPELINE_URP` must be added to Player Settings
+
+**Setup Instructions:** See `Assets/AuraURP/README.md` for detailed setup instructions.
+
+**Current Limitations (MVP):**
+- ❌ URP shadow atlas integration (shadows disabled)
+- ❌ Cookie texture integration (cookies disabled)
+- ❌ Per-light data from URP's light buffers
+- ✅ Basic volumetric fog/density works
+- ✅ Anisotropy and blue noise dithering work
+- ✅ Compute shader-based accumulation works
 
 ----------
 ## Acknowledgement
@@ -125,7 +146,9 @@ You can click on the following button for making a donation via Paypal.
 Hopefully yes! At least until Unity drops the legacy lighting system. Furthermore, I still have a bunch of feature ideas to implement, fixes and todos.
 
 ### Will Aura support the Scriptable Render Pipeline?
-Anyhow, all this work cannot stop with the end of the legacy pipeline. So yes, my plan is to make it work with the SRP for the long term continuation. It may however be part of another branch/repository.
+Yes! Aura now includes experimental support for Unity's Universal Render Pipeline (URP). See the `Assets/AuraURP/README.md` for setup instructions.
+
+**Note**: The URP integration is currently in MVP (Minimum Viable Product) status. Basic volumetric fog works, but advanced features like URP shadow atlas integration and cookies are not yet implemented. This is an ongoing effort to ensure Aura works with modern render pipelines.
 
 ### Does Aura work on Unity xxx?
 The technical requirement for Aura are specified in the Requirements section.
