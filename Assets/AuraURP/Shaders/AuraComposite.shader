@@ -54,9 +54,9 @@ Shader "Hidden/Aura/Composite"
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
             
-            // Global volumetric texture set by Aura
-            TEXTURE3D(Aura_VolumetricDataTexture);
-            SAMPLER(samplerAura_VolumetricDataTexture);
+            // Global volumetric accumulated fog texture set by Aura
+            TEXTURE3D(Aura_VolumetricLightingTexture);
+            SAMPLER(samplerAura_VolumetricLightingTexture);
             
             float4 Aura_FrustumRange;
 
@@ -92,9 +92,9 @@ Shader "Hidden/Aura/Composite"
                 // Rescale depth to frustum range (normalized 0-1)
                 float rescaledDepth = saturate((depth - Aura_FrustumRange.x) / (Aura_FrustumRange.y - Aura_FrustumRange.x));
                 
-                // Sample the volumetric data texture (3D texture with lighting and fog)
+                // Sample the volumetric accumulated fog texture (3D texture with accumulated lighting and fog)
                 float3 volumeCoords = float3(input.uv, rescaledDepth);
-                float4 fogValue = SAMPLE_TEXTURE3D(Aura_VolumetricDataTexture, samplerAura_VolumetricDataTexture, volumeCoords);
+                float4 fogValue = SAMPLE_TEXTURE3D(Aura_VolumetricLightingTexture, samplerAura_VolumetricLightingTexture, volumeCoords);
                 
                 // Apply fog: 
                 // fogValue.rgb = inscattering (light accumulated along the ray)
